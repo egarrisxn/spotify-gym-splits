@@ -1,13 +1,29 @@
-import { NextResponse } from "next/server"
-import { refreshAccessToken } from "@/lib/spotify"
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { refreshAccessToken } from "@/lib/spotify";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET() {
-  const accessToken = await refreshAccessToken()
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.refreshToken) {
+      throw new Error("No refresh token found");
+    }
 
-  if (accessToken) {
-    return NextResponse.json({ accessToken })
-  } else {
-    return NextResponse.json({ error: "Failed to refresh token" }, { status: 500 })
+    const accessToken = await refreshAccessToken(
+      session.refreshToken as string
+    );
+
+    if (accessToken) {
+      return NextResponse.json({ accessToken });
+    } else {
+      throw new Error("Failed to refresh token");
+    }
+  } catch (error) {
+    console.error("Error in refresh token route:", error);
+    return NextResponse.json(
+      { error: "Failed to refresh token" },
+      { status: 500 }
+    );
   }
 }
-

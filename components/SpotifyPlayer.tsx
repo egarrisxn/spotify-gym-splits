@@ -1,58 +1,335 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
-import spotifyApi from "@/lib/spotify"
-import SpotifyWebPlaybackSdk from "react-spotify-web-playback-sdk"
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import spotifyApi from "@/lib/spotify";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Volume2, VolumeX } from "lucide-react";
+import type {
+  SpotifyPlayerProps,
+  SpotifyPlayerState,
+  SpotifyError,
+} from "@/types";
 
-export default function SpotifyPlayer({ isPlaying, onPlaybackChange }) {
-  const { data: session } = useSession()
-  const [accessToken, setAccessToken] = useState(null)
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void;
+    Spotify: {
+      Player: new (options: any) => any;
+    };
+  }
+}
+
+export default function SpotifyPlayer({
+  isPlaying,
+  onPlaybackChange,
+  playlistId,
+}: SpotifyPlayerProps) {
+  const { data: session, status } = useSession();
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [volume, setVolume] = useState(50);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
     const refreshToken = async () => {
-      const res = await fetch("/api/spotify/refresh")
-      const data = await res.json()
-      if (data.accessToken) {
-        setAccessToken(data.accessToken)
-        spotifyApi.setAccessToken(data.accessToken)
+      try {
+        const res = await fetch("/api/spotify/refresh");
+        const data = await res.json();
+        if (data.accessToken) {
+          setAccessToken(data.accessToken);
+          spotifyApi.setAccessToken(data.accessToken);
+        } else {
+          throw new Error("Failed to refresh token");
+        }
+      } catch (err) {
+        setError("Failed to connect to Spotify. Please try again.");
+        console.error(err);
       }
+    };
+
+    if (status === "authenticated") {
+      refreshToken();
+      const refreshInterval = setInterval(refreshToken, 3600000); // Refresh every hour
+      return () => clearInterval(refreshInterval);
     }
-
-    refreshToken()
-    const refreshInterval = setInterval(refreshToken, 3600000) // Refresh every hour
-
-    return () => clearInterval(refreshInterval)
-  }, [])
+  }, [status]);
 
   useEffect(() => {
     if (accessToken) {
+      const script = document.createElement("script");
+      script.src = "https://sdk.scdn.co/spotify-player.js";
+      script.async = true;
+      document.body.appendChild(script);
+
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        const player = new window.Spotify.Player({
+          name: "Spotify Gym Splits",
+          getOAuthToken: (cb: (token: string) => void) => {
+            cb(accessToken);
+          },
+          volume: volume / 100,
+        });
+
+        player.addListener("ready", ({ device_id }: { device_id: string }) => {
+          console.log("Ready with Device ID", device_id);
+          setDeviceId(device_id);
+        });
+
+        player.addListener(
+          "not_ready",
+          ({ device_id }: { device_id: string }) => {
+            console.log("Device ID has gone offline", device_id);
+          }
+        );
+
+        player.addListener(
+          "player_state_changed",
+          (state: SpotifyPlayerState) => {
+            if (state) {
+              onPlaybackChange(!state.paused);
+            }
+          }
+        );
+
+        player.connect().then((success: boolean) => {
+          if (success) {
+            console.log(
+              "The Web Playback SDK successfully connected to Spotify!"
+            );
+          }
+        });
+      };
+    }
+  }, [accessToken, volume, onPlaybackChange]);
+
+  useEffect(() => {
+    if (accessToken && deviceId) {
       if (isPlaying) {
         spotifyApi
-          .play()
-          .then(() => onPlaybackChange(true))
-          .catch(console.error)
+          .play({
+            device_id: deviceId,
+            context_uri: `spotify:playlist:${playlistId}`,
+          })
+          .catch((err: SpotifyError) => {
+            setError("Failed to start playback. Please try again.");
+            console.error(err);
+          });
       } else {
-        spotifyApi
-          .pause()
-          .then(() => onPlaybackChange(false))
-          .catch(console.error)
+        spotifyApi.pause({ device_id: deviceId }).catch((err: SpotifyError) => {
+          setError("Failed to pause playback. Please try again.");
+          console.error(err);
+        });
       }
     }
-  }, [isPlaying, accessToken, onPlaybackChange])
+  }, [isPlaying, accessToken, deviceId, playlistId]);
 
-  if (!accessToken) return null
+  useEffect(() => {
+    if (accessToken && deviceId) {
+      spotifyApi
+        .setVolume(volume, { device_id: deviceId })
+        .catch(console.error);
+    }
+  }, [volume, accessToken, deviceId]);
+
+  if (status === "loading") {
+    return <div>Loading Spotify player...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  if (!accessToken) {
+    return <div>Please log in to Spotify to use the player.</div>;
+  }
 
   return (
-    <SpotifyWebPlaybackSdk
-      name="Spotify Gym Splits"
-      token={accessToken}
-      uris={["spotify:playlist:37i9dQZF1DX76Wlfdnj7AP"]} // This is an example workout playlist
-      play={isPlaying}
-      onPlaybackStateChange={(state) => {
-        onPlaybackChange(state.isPlaying)
-      }}
-    />
-  )
+    <div className="mt-4">
+      <div className="flex items-center space-x-2">
+        <Button onClick={() => setVolume(0)} variant="ghost" size="icon">
+          <VolumeX className="h-4 w-4" />
+        </Button>
+        <Slider
+          value={[volume]}
+          onValueChange={(value) => setVolume(value[0])}
+          max={100}
+          step={1}
+          className="w-[100px]"
+        />
+        <Button onClick={() => setVolume(100)} variant="ghost" size="icon">
+          <Volume2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import { useSession } from "next-auth/react";
+// import spotifyApi from "@/lib/spotify";
+// import { Button } from "@/components/ui/button";
+// import { Slider } from "@/components/ui/slider";
+// import { Volume2, VolumeX } from "lucide-react";
+// import type {
+//   SpotifyPlayerProps,
+//   SpotifyPlayerState,
+//   SpotifyError,
+// } from "@/types";
+
+// declare global {
+//   interface Window {
+//     onSpotifyWebPlaybackSDKReady: () => void;
+//     Spotify: {
+//       Player: new (options: any) => any;
+//     };
+//   }
+// }
+
+// export default function SpotifyPlayer({
+//   isPlaying,
+//   onPlaybackChange,
+//   playlistId,
+// }: SpotifyPlayerProps) {
+//   const { data: session, status } = useSession();
+//   const [accessToken, setAccessToken] = useState<string | null>(null);
+//   const [error, setError] = useState<string | null>(null);
+//   const [volume, setVolume] = useState(50);
+//   const [deviceId, setDeviceId] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     const refreshToken = async () => {
+//       try {
+//         const res = await fetch("/api/spotify/refresh");
+//         const data = await res.json();
+//         if (data.accessToken) {
+//           setAccessToken(data.accessToken);
+//           spotifyApi.setAccessToken(data.accessToken);
+//         } else {
+//           throw new Error("Failed to refresh token");
+//         }
+//       } catch (err) {
+//         setError("Failed to connect to Spotify. Please try again.");
+//         console.error(err);
+//       }
+//     };
+
+//     if (status === "authenticated" && session?.accessToken) {
+//       refreshToken();
+//       const refreshInterval = setInterval(refreshToken, 3600000); // Refresh every hour
+//       return () => clearInterval(refreshInterval);
+//     }
+//   }, [status, session]);
+
+//   useEffect(() => {
+//     if (accessToken) {
+//       const script = document.createElement("script");
+//       script.src = "https://sdk.scdn.co/spotify-player.js";
+//       script.async = true;
+//       document.body.appendChild(script);
+
+//       window.onSpotifyWebPlaybackSDKReady = () => {
+//         const player = new window.Spotify.Player({
+//           name: "Spotify Gym Splits",
+//           getOAuthToken: (cb: (token: string) => void) => {
+//             cb(accessToken);
+//           },
+//           volume: volume / 100,
+//         });
+
+//         player.addListener("ready", ({ device_id }: { device_id: string }) => {
+//           console.log("Ready with Device ID", device_id);
+//           setDeviceId(device_id);
+//         });
+
+//         player.addListener(
+//           "not_ready",
+//           ({ device_id }: { device_id: string }) => {
+//             console.log("Device ID has gone offline", device_id);
+//           }
+//         );
+
+//         player.addListener(
+//           "player_state_changed",
+//           (state: SpotifyPlayerState) => {
+//             if (state) {
+//               onPlaybackChange(!state.paused);
+//             }
+//           }
+//         );
+
+//         player.connect().then((success: boolean) => {
+//           if (success) {
+//             console.log(
+//               "The Web Playback SDK successfully connected to Spotify!"
+//             );
+//           }
+//         });
+//       };
+//     }
+//   }, [accessToken, volume, onPlaybackChange]);
+
+//   useEffect(() => {
+//     if (accessToken && deviceId) {
+//       if (isPlaying) {
+//         spotifyApi
+//           .play({
+//             device_id: deviceId,
+//             context_uri: `spotify:playlist:${playlistId}`,
+//           })
+//           .catch((err: SpotifyError) => {
+//             setError("Failed to start playback. Please try again.");
+//             console.error(err);
+//           });
+//       } else {
+//         spotifyApi.pause({ device_id: deviceId }).catch((err: SpotifyError) => {
+//           setError("Failed to pause playback. Please try again.");
+//           console.error(err);
+//         });
+//       }
+//     }
+//   }, [isPlaying, accessToken, deviceId, playlistId]);
+
+//   useEffect(() => {
+//     if (accessToken && deviceId) {
+//       spotifyApi
+//         .setVolume(volume, { device_id: deviceId })
+//         .catch(console.error);
+//     }
+//   }, [volume, accessToken, deviceId]);
+
+//   if (status === "loading") {
+//     return <div>Loading Spotify player...</div>;
+//   }
+
+//   if (error) {
+//     return <div className="text-red-500">{error}</div>;
+//   }
+
+//   if (!accessToken) {
+//     return <div>Please log in to Spotify to use the player.</div>;
+//   }
+
+//   return (
+//     <div className="mt-4">
+//       <div className="flex items-center space-x-2">
+//         <Button onClick={() => setVolume(0)} variant="ghost" size="icon">
+//           <VolumeX className="h-4 w-4" />
+//         </Button>
+//         <Slider
+//           value={[volume]}
+//           onValueChange={(value) => setVolume(value[0])}
+//           max={100}
+//           step={1}
+//           className="w-[100px]"
+//         />
+//         <Button onClick={() => setVolume(100)} variant="ghost" size="icon">
+//           <Volume2 className="h-4 w-4" />
+//         </Button>
+//       </div>
+//     </div>
+//   );
+// }
