@@ -90,11 +90,3 @@ export interface SpotifyTrack {
   name: string;
   uri: string;
 }
-
-export interface GlowAreaProps extends ComponentPropsWithoutRef<"div"> {
-  size?: number;
-}
-
-export interface GlowProps extends ComponentPropsWithoutRef<"div"> {
-  color?: string;
-}

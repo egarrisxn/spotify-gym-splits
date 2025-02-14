@@ -21,7 +21,7 @@ export async function GET() {
     console.error("Error in refresh token route:", error);
     return NextResponse.json(
       { error: "Failed to refresh token" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

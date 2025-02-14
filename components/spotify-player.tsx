@@ -1,17 +1,31 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import spotifyApi from "@/lib/spotify";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Volume2, VolumeX } from "lucide-react";
-
 import type {
   SpotifyPlayerProps,
   SpotifyPlayerState,
   SpotifyDevice,
 } from "@/types";
+
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void;
+    Spotify: {
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (cb: (token: string) => void) => void;
+        volume: number;
+      }) => {
+        addListener: (eventName: string, callback: (data: any) => void) => void;
+        connect: () => Promise<boolean>;
+      };
+    };
+  }
+}
 
 export default function SpotifyPlayer({
   isPlaying,
@@ -79,13 +93,13 @@ export default function SpotifyPlayer({
             if (state) {
               onPlaybackChange(!state.paused);
             }
-          }
+          },
         );
 
         player.connect().then((success: boolean) => {
           if (success) {
             console.log(
-              "The Web Playback SDK successfully connected to Spotify!"
+              "The Web Playback SDK successfully connected to Spotify!",
             );
           }
         });

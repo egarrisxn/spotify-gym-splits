@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import SpotifyPlayer from "./spotify-player";
-
 import type { WorkoutTimerProps } from "@/types";
 
 const WORKOUT_PLAYLISTS = [
@@ -25,7 +23,7 @@ export default function WorkoutTimer({ intervals }: WorkoutTimerProps) {
   const [isActive, setIsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedPlaylist, setSelectedPlaylist] = useState(
-    WORKOUT_PLAYLISTS[0].id
+    WORKOUT_PLAYLISTS[0].id,
   );
 
   useEffect(() => {
@@ -53,16 +51,14 @@ export default function WorkoutTimer({ intervals }: WorkoutTimerProps) {
   };
 
   return (
-    <div className="text-center space-y-6">
+    <div className="space-y-6 text-center">
       <h2 className="text-3xl font-bold">
         {intervals[currentInterval].type === "work" ? "Work" : "Rest"}
       </h2>
       <div className="text-7xl font-bold">{timeLeft}</div>
-      <Button onClick={toggleTimer} className="text-xl px-8 py-6">
-        {isActive ? "Pause" : "Start"}
-      </Button>
+      <Button onClick={toggleTimer}>{isActive ? "Pause" : "Start"}</Button>
       <div className="mt-8">
-        <h3 className="text-xl font-semibold mb-2">Select Workout Playlist</h3>
+        <h3 className="mb-2 text-xl font-semibold">Select Workout Playlist</h3>
         <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
           <SelectTrigger className="w-[300px]">
             <SelectValue placeholder="Select a playlist" />

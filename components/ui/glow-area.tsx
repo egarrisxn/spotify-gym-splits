@@ -1,5 +1,4 @@
 "use client";
-
 import React, {
   ComponentPropsWithoutRef,
   CSSProperties,
@@ -8,7 +7,9 @@ import React, {
 } from "react";
 import { cn } from "@/lib/utils";
 
-import { type GlowAreaProps, type GlowProps } from "@/types";
+interface GlowAreaProps extends ComponentPropsWithoutRef<"div"> {
+  size?: number;
+}
 
 export const GlowArea = (props: GlowAreaProps) => {
   const { className = "", size = 300, ...rest } = props;
@@ -20,11 +21,11 @@ export const GlowArea = (props: GlowAreaProps) => {
     if (latestCoords.current && element.current) {
       element.current.style.setProperty(
         "--glow-x",
-        `${latestCoords.current.x}px`
+        `${latestCoords.current.x}px`,
       );
       element.current.style.setProperty(
         "--glow-y",
-        `${latestCoords.current.y}px`
+        `${latestCoords.current.y}px`,
       );
       frameId.current = null;
     }
@@ -65,6 +66,10 @@ export const GlowArea = (props: GlowAreaProps) => {
 
 GlowArea.displayName = "GlowArea";
 
+interface GlowProps extends ComponentPropsWithoutRef<"div"> {
+  color?: string;
+}
+
 export const Glow = (props: GlowProps) => {
   const { className, color = "blue", children, ...rest } = props;
   const element = useRef<HTMLDivElement>(null);
@@ -72,11 +77,11 @@ export const Glow = (props: GlowProps) => {
   useEffect(() => {
     element.current?.style.setProperty(
       "--glow-top",
-      `${element.current?.offsetTop}px`
+      `${element.current?.offsetTop}px`,
     );
     element.current?.style.setProperty(
       "--glow-left",
-      `${element.current?.offsetLeft}px`
+      `${element.current?.offsetLeft}px`,
     );
   }, []);
 
@@ -94,7 +99,7 @@ export const Glow = (props: GlowProps) => {
         }}
         className={cn(
           className,
-          "absolute pointer-events-none inset-0 dark:mix-blend-lighten mix-blend-multiply after:content-[''] after:absolute after:bg-background/90 after:inset-0.25 after:rounded-[inherit]"
+          "after:inset-0.25 pointer-events-none absolute inset-0 mix-blend-multiply after:absolute after:rounded-[inherit] after:bg-background/90 after:content-[''] dark:mix-blend-lighten",
         )}
       ></div>
       {children}

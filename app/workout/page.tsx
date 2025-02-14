@@ -1,11 +1,10 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Card } from "@/components/ui/card";
 import WorkoutSetup from "@/components/workout-setup";
 import WorkoutTimer from "@/components/workout-timer";
-
 import type { Interval } from "@/types";
 
 export default function WorkoutPage() {
@@ -34,12 +33,14 @@ export default function WorkoutPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      {!workoutStarted ? (
-        <WorkoutSetup onStart={startWorkout} />
-      ) : (
-        <WorkoutTimer intervals={intervals} />
-      )}
-    </main>
+    <section className="grid min-h-screen place-items-center pb-40">
+      <Card className="w-full max-w-lg border p-12 shadow-lg">
+        {!workoutStarted ? (
+          <WorkoutSetup onStart={startWorkout} />
+        ) : (
+          <WorkoutTimer intervals={intervals} />
+        )}
+      </Card>
+    </section>
   );
 }

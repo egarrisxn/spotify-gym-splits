@@ -1,9 +1,7 @@
 "use client";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import type { WorkoutSetupProps, Interval } from "@/types";
 
 export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {
@@ -22,7 +20,7 @@ export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {
 
   return (
     <div className="w-full max-w-md">
-      <h2 className="text-2xl font-bold mb-4">Set Up Your Workout</h2>
+      <h2 className="mb-4 text-2xl font-bold">Set Up Your Workout</h2>
       <div className="space-y-4">
         <div>
           <label

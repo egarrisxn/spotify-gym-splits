@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect } from "react";
 import { signIn } from "next-auth/react";
 
@@ -8,5 +7,5 @@ export default function SignIn() {
     signIn("spotify", { callbackUrl: "/workout" });
   }, []);
 
-  return <div className="text-center p-8">Redirecting to Spotify login...</div>;
+  return <div className="p-8 text-center">Redirecting to Spotify login...</div>;
 }
