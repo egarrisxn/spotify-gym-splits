@@ -17,7 +17,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import SpotifyPlayer from "./spotify-player";
-import type { WorkoutTimerProps } from "@/types";
+
+interface Interval {
+  type: "work" | "rest";
+  duration: number;
+}
+
+interface WorkoutTimerProps {
+  intervals: Interval[];
+}
 
 const WORKOUT_PLAYLISTS = [
   { id: "37i9dQZF1DX76Wlfdnj7AP", name: "Beast Mode" },

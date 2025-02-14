@@ -5,8 +5,46 @@ import spotifyApi from "@/lib/spotify";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Volume2, VolumeX } from "lucide-react";
-import type { SpotifyPlayerProps } from "@/types";
-import type { PlaybackState } from "@/types";
+
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void;
+    Spotify: {
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (cb: (token: string) => void) => void;
+        volume: number;
+      }) => {
+        addListener<T>(eventName: string, callback: (data: T) => void): void;
+        connect: () => Promise<boolean>;
+        removeListener: (eventName: string) => void;
+        togglePlay: () => Promise<void>;
+        getCurrentState: () => Promise<any>;
+        setVolume: (volume: number) => Promise<void>;
+      };
+    };
+  }
+}
+
+interface SpotifyPlayerProps {
+  isPlaying: boolean;
+  onPlaybackChange: (isPlaying: boolean) => void;
+  playlistId: string;
+}
+
+interface PlaybackState {
+  paused: boolean;
+  position: number;
+  duration: number;
+  track_window: {
+    current_track: {
+      id: string;
+      name: string;
+      artists: { name: string }[];
+      uri: string;
+    };
+  };
+}
 
 export default function SpotifyPlayer({
   isPlaying,
@@ -47,13 +85,11 @@ export default function SpotifyPlayer({
   useEffect(() => {
     if (!accessToken) return;
 
-    // Dynamically load Spotify Web Playback SDK
     const script = document.createElement("script");
     script.src = "https://sdk.scdn.co/spotify-player.js";
     script.async = true;
     document.body.appendChild(script);
 
-    // Define the callback function when the script is loaded
     window.onSpotifyWebPlaybackSDKReady = () => {
       const newPlayer = new window.Spotify.Player({
         name: "Web Playback SDK",
@@ -86,11 +122,9 @@ export default function SpotifyPlayer({
     };
 
     script.onload = () => {
-      // This will be called once the script has loaded
       console.log("Spotify Web Playback SDK loaded successfully");
     };
 
-    // Error handling if the SDK fails to load
     script.onerror = () => {
       setError(
         "Failed to load Spotify Web Playback SDK. Please check your connection.",

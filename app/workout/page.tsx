@@ -4,7 +4,11 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import WorkoutSetup from "@/components/workout-setup";
 import WorkoutTimer from "@/components/workout-timer";
-import type { Interval } from "@/types";
+
+interface Interval {
+  type: "work" | "rest";
+  duration: number;
+}
 
 export default function WorkoutPage() {
   const { data: session, status } = useSession();

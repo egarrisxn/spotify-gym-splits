@@ -2,6 +2,21 @@ import NextAuth from "next-auth";
 import SpotifyProvider from "next-auth/providers/spotify";
 import type { NextAuthOptions } from "next-auth";
 
+declare module "next-auth" {
+  export interface Session {
+    accessToken?: string | null;
+    refreshToken?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  export interface JWT {
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    expiresAt?: number | null;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     SpotifyProvider({

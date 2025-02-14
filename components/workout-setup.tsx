@@ -3,7 +3,15 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import type { WorkoutSetupProps, Interval } from "@/types";
+
+interface Interval {
+  type: "work" | "rest";
+  duration: number;
+}
+
+interface WorkoutSetupProps {
+  onStart: (intervals: Interval[]) => void;
+}
 
 export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {
   const [workTime, setWorkTime] = useState(90);
