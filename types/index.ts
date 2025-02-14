@@ -90,3 +90,67 @@ export interface SpotifyTrack {
   name: string;
   uri: string;
 }
+
+  export interface Player {
+    addListener<T>(eventName: string, callback: (data: T) => void): void;
+    connect(): Promise<boolean>;
+    removeListener(eventName: string): void;
+    setVolume(volume: number): Promise<void>;
+  }
+
+  export interface Spotify {
+    Player: new (options: {
+      name: string;
+      getOAuthToken: (cb: (token: string) => void) => void;
+      volume: number;
+    }) => Player;
+  }
+
+  export interface PlaybackState = {
+    paused: boolean;
+    position: number;
+    duration: number;
+    track_window: {
+      current_track: {
+        id: string;
+        name: string;
+        artists: { name: string }[];
+        uri: string;
+      };
+    };
+  };
+
+declare module "next-auth" {
+  export interface Session {
+    accessToken?: string | null;
+    refreshToken?: string | null;
+  }
+}
+
+declare module "next-auth/jwt" {
+  export interface JWT {
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    expiresAt?: number | null;
+  }
+}
+
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void;
+    Spotify: {
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (cb: (token: string) => void) => void;
+        volume: number;
+      }) => {
+        addListener<T>(eventName: string, callback: (data: T) => void): void;
+        connect: () => Promise<boolean>;
+        removeListener: (eventName: string) => void;
+        togglePlay: () => Promise<void>;
+        getCurrentState: () => Promise<any>;
+        setVolume: (volume: number) => Promise<void>;
+      };
+    };
+  }
+}

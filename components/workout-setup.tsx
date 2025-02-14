@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import type { WorkoutSetupProps, Interval } from "@/types";
 
 export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {
@@ -19,7 +20,7 @@ export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {
   };
 
   return (
-    <div className="w-full max-w-md">
+    <Card className="w-full max-w-lg border p-12 shadow-lg">
       <h2 className="mb-4 text-2xl font-bold">Set Up Your Workout</h2>
       <div className="space-y-4">
         <div>
@@ -71,6 +72,6 @@ export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {
           Start Workout
         </Button>
       </div>
-    </div>
+    </Card>
   );
 }

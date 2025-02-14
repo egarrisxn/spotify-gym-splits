@@ -8,6 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import SpotifyPlayer from "./spotify-player";
 import type { WorkoutTimerProps } from "@/types";
 
@@ -51,14 +59,21 @@ export default function WorkoutTimer({ intervals }: WorkoutTimerProps) {
   };
 
   return (
-    <div className="space-y-6 text-center">
-      <h2 className="text-3xl font-bold">
-        {intervals[currentInterval].type === "work" ? "Work" : "Rest"}
-      </h2>
-      <div className="text-7xl font-bold">{timeLeft}</div>
-      <Button onClick={toggleTimer}>{isActive ? "Pause" : "Start"}</Button>
-      <div className="mt-8">
-        <h3 className="mb-2 text-xl font-semibold">Select Workout Playlist</h3>
+    <Card className="w-full max-w-lg border p-12 shadow-lg">
+      <CardHeader className="mx-auto flex flex-col items-center justify-center gap-1">
+        <CardTitle className="text-3xl font-bold">
+          {intervals[currentInterval].type === "work" ? "Work" : "Rest"}
+        </CardTitle>
+        <CardDescription className="text-7xl font-bold">
+          {timeLeft}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="mx-auto flex flex-col items-center justify-center gap-4">
+        <Button onClick={toggleTimer} className="px-8 py-6 text-xl">
+          {isActive ? "Pause" : "Start"}
+        </Button>
+        <hr className="w-full border" />
+        <h3 className="text-xl font-semibold">Select Workout Playlist</h3>
         <Select value={selectedPlaylist} onValueChange={setSelectedPlaylist}>
           <SelectTrigger className="w-[300px]">
             <SelectValue placeholder="Select a playlist" />
@@ -71,12 +86,14 @@ export default function WorkoutTimer({ intervals }: WorkoutTimerProps) {
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <SpotifyPlayer
-        isPlaying={isPlaying}
-        onPlaybackChange={setIsPlaying}
-        playlistId={selectedPlaylist}
-      />
-    </div>
+      </CardContent>
+      <CardFooter className="mx-auto flex items-center justify-center">
+        <SpotifyPlayer
+          isPlaying={isPlaying}
+          onPlaybackChange={setIsPlaying}
+          playlistId={selectedPlaylist}
+        />
+      </CardFooter>
+    </Card>
   );
 }
