@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 import type { WorkoutSetupProps, Interval } from "@/types";
 
 export default function WorkoutSetup({ onStart }: WorkoutSetupProps) {

@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import WorkoutSetup from "@/components/WorkoutSetup";
-import WorkoutTimer from "@/components/WorkoutTimer";
+import WorkoutSetup from "@/components/workout-setup";
+import WorkoutTimer from "@/components/workout-timer";
+
 import type { Interval } from "@/types";
 
 export default function WorkoutPage() {

@@ -9,7 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import SpotifyPlayer from "./SpotifyPlayer";
+import SpotifyPlayer from "./spotify-player";
+
 import type { WorkoutTimerProps } from "@/types";
 
 const WORKOUT_PLAYLISTS = [

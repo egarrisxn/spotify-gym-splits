@@ -2,16 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -89,6 +79,16 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply scroll-smooth bg-background font-sans text-foreground antialiased;
   }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
 }

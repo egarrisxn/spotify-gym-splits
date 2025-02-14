@@ -1,14 +1,34 @@
-import Link from "next/link"
+import Link from "next/link";
+import { Glow, GlowArea } from "@/components/glow";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold mb-8">Spotify Gym Splits</h1>
-      <p className="text-xl mb-8">Create your perfect workout playlist with timed intervals</p>
-      <Link href="/workout" className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-        Start Workout
-      </Link>
-    </main>
-  )
+    <GlowArea className="grid mx-auto place-items-center min-h-screen">
+      <Glow color="green" className="rounded-xl">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-4xl font-bold mb-4">
+              Spotify Gym Splits
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Create your perfect workout playlist with timed intervals
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex mx-auto items-center justify-center">
+            <Button asChild>
+              <Link href="/workout">Start Workout</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </Glow>
+    </GlowArea>
+  );
 }
-
