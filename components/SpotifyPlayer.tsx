@@ -9,14 +9,21 @@ import { Volume2, VolumeX } from "lucide-react";
 import type {
   SpotifyPlayerProps,
   SpotifyPlayerState,
-  SpotifyError,
+  SpotifyDevice,
 } from "@/types";
 
 declare global {
   interface Window {
     onSpotifyWebPlaybackSDKReady: () => void;
     Spotify: {
-      Player: new (options: any) => any;
+      Player: new (options: {
+        name: string;
+        getOAuthToken: (cb: (token: string) => void) => void;
+        volume: number;
+      }) => {
+        addListener: (eventName: string, callback: (data: any) => void) => void;
+        connect: () => Promise<boolean>;
+      };
     };
   }
 }
@@ -49,12 +56,12 @@ export default function SpotifyPlayer({
       }
     };
 
-    if (status === "authenticated") {
+    if (status === "authenticated" && session?.accessToken) {
       refreshToken();
       const refreshInterval = setInterval(refreshToken, 3600000); // Refresh every hour
       return () => clearInterval(refreshInterval);
     }
-  }, [status]);
+  }, [status, session]);
 
   useEffect(() => {
     if (accessToken) {
@@ -72,17 +79,14 @@ export default function SpotifyPlayer({
           volume: volume / 100,
         });
 
-        player.addListener("ready", ({ device_id }: { device_id: string }) => {
+        player.addListener("ready", ({ device_id }: SpotifyDevice) => {
           console.log("Ready with Device ID", device_id);
           setDeviceId(device_id);
         });
 
-        player.addListener(
-          "not_ready",
-          ({ device_id }: { device_id: string }) => {
-            console.log("Device ID has gone offline", device_id);
-          }
-        );
+        player.addListener("not_ready", ({ device_id }: SpotifyDevice) => {
+          console.log("Device ID has gone offline", device_id);
+        });
 
         player.addListener(
           "player_state_changed",
@@ -112,12 +116,12 @@ export default function SpotifyPlayer({
             device_id: deviceId,
             context_uri: `spotify:playlist:${playlistId}`,
           })
-          .catch((err: SpotifyError) => {
+          .catch((err) => {
             setError("Failed to start playback. Please try again.");
             console.error(err);
           });
       } else {
-        spotifyApi.pause({ device_id: deviceId }).catch((err: SpotifyError) => {
+        spotifyApi.pause({ device_id: deviceId }).catch((err) => {
           setError("Failed to pause playback. Please try again.");
           console.error(err);
         });
@@ -177,14 +181,21 @@ export default function SpotifyPlayer({
 // import type {
 //   SpotifyPlayerProps,
 //   SpotifyPlayerState,
-//   SpotifyError,
+//   SpotifyDevice,
 // } from "@/types";
 
 // declare global {
 //   interface Window {
 //     onSpotifyWebPlaybackSDKReady: () => void;
 //     Spotify: {
-//       Player: new (options: any) => any;
+//       Player: new (options: {
+//         name: string;
+//         getOAuthToken: (cb: (token: string) => void) => void;
+//         volume: number;
+//       }) => {
+//         addListener: (eventName: string, callback: (data: any) => void) => void;
+//         connect: () => Promise<boolean>;
+//       };
 //     };
 //   }
 // }
@@ -240,17 +251,14 @@ export default function SpotifyPlayer({
 //           volume: volume / 100,
 //         });
 
-//         player.addListener("ready", ({ device_id }: { device_id: string }) => {
+//         player.addListener("ready", ({ device_id }: SpotifyDevice) => {
 //           console.log("Ready with Device ID", device_id);
 //           setDeviceId(device_id);
 //         });
 
-//         player.addListener(
-//           "not_ready",
-//           ({ device_id }: { device_id: string }) => {
-//             console.log("Device ID has gone offline", device_id);
-//           }
-//         );
+//         player.addListener("not_ready", ({ device_id }: SpotifyDevice) => {
+//           console.log("Device ID has gone offline", device_id);
+//         });
 
 //         player.addListener(
 //           "player_state_changed",
@@ -280,12 +288,12 @@ export default function SpotifyPlayer({
 //             device_id: deviceId,
 //             context_uri: `spotify:playlist:${playlistId}`,
 //           })
-//           .catch((err: SpotifyError) => {
+//           .catch((err) => {
 //             setError("Failed to start playback. Please try again.");
 //             console.error(err);
 //           });
 //       } else {
-//         spotifyApi.pause({ device_id: deviceId }).catch((err: SpotifyError) => {
+//         spotifyApi.pause({ device_id: deviceId }).catch((err) => {
 //           setError("Failed to pause playback. Please try again.");
 //           console.error(err);
 //         });
